@@ -105,12 +105,12 @@ boxRoot = None
 buttonsFrame = None
 
 
-def _alertTkinter(text="", title="", button=OK_TEXT, root=None, timeout=None):
+def _alertTkinter(text="", title="", button=OK_TEXT, root=None, timeout=None, geom=None):
     """Displays a simple message box with text and a single OK button. Returns the text of the button clicked on."""
     assert TKINTER_IMPORT_SUCCEEDED, "Tkinter is required for pymsgbox"
     text = str(text)
     retVal = _buttonbox(
-        msg=text, title=title, choices=[str(button)], root=root, timeout=timeout
+        msg=text, title=title, choices=[str(button)], root=root, timeout=timeout, geom=geom
     )
     if retVal is None:
         return button
@@ -122,7 +122,7 @@ alert = _alertTkinter
 
 
 def _confirmTkinter(
-    text="", title="", buttons=(OK_TEXT, CANCEL_TEXT), root=None, timeout=None
+    text="", title="", buttons=(OK_TEXT, CANCEL_TEXT), root=None, timeout=None, geom=None
 ):
     """Displays a message box with OK and Cancel buttons. Number and text of buttons can be customized. Returns the text of the button clicked on."""
     assert TKINTER_IMPORT_SUCCEEDED, "Tkinter is required for pymsgbox"
@@ -133,6 +133,7 @@ def _confirmTkinter(
         choices=[str(b) for b in buttons],
         root=root,
         timeout=timeout,
+        geom=geom
     )
 
 
@@ -181,7 +182,7 @@ def timeoutBoxRoot():
     __enterboxText = TIMEOUT_RETURN_VALUE
 
 
-def _buttonbox(msg, title, choices, root=None, timeout=None):
+def _buttonbox(msg, title, choices, root=None, timeout=None, geom=None):
     """
     Display a msg, a title, and a set of buttons.
     The buttons are defined by the members of the choices list.
@@ -204,11 +205,14 @@ def _buttonbox(msg, title, choices, root=None, timeout=None):
     else:
         boxRoot = tk.Tk()
         boxRoot.withdraw()
+    if geom:
+      rootWindowPosition=geom
 
     boxRoot.title(title)
     boxRoot.iconname("Dialog")
     boxRoot.geometry(rootWindowPosition)
-    boxRoot.minsize(400, 100)
+    boxRoot.minsize(200,100)
+    boxRoot.protocol('WM_DELETE_WINDOW',lambda: None)
 
     # ------------- define the messageFrame ---------------------------------
     messageFrame = tk.Frame(master=boxRoot)
