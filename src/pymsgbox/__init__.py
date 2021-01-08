@@ -105,12 +105,12 @@ boxRoot = None
 buttonsFrame = None
 
 
-def _alertTkinter(text="", title="", button=OK_TEXT, root=None, timeout=None, geom=None):
+def _alertTkinter(text="", title="", button=OK_TEXT, root=None, timeout=None):
     """Displays a simple message box with text and a single OK button. Returns the text of the button clicked on."""
     assert TKINTER_IMPORT_SUCCEEDED, "Tkinter is required for pymsgbox"
     text = str(text)
     retVal = _buttonbox(
-        msg=text, title=title, choices=[str(button)], root=root, timeout=timeout, geom=geom
+        msg=text, title=title, choices=[str(button)], root=root, timeout=timeout
     )
     if retVal is None:
         return button
@@ -121,9 +121,7 @@ def _alertTkinter(text="", title="", button=OK_TEXT, root=None, timeout=None, ge
 alert = _alertTkinter
 
 
-def _confirmTkinter(
-    text="", title="", buttons=(OK_TEXT, CANCEL_TEXT), root=None, timeout=None, geom=None
-):
+def _confirmTkinter(text="", title="", buttons=(OK_TEXT, CANCEL_TEXT), root=None, timeout=None):
     """Displays a message box with OK and Cancel buttons. Number and text of buttons can be customized. Returns the text of the button clicked on."""
     assert TKINTER_IMPORT_SUCCEEDED, "Tkinter is required for pymsgbox"
     text = str(text)
@@ -132,10 +130,8 @@ def _confirmTkinter(
         title=title,
         choices=[str(b) for b in buttons],
         root=root,
-        timeout=timeout,
-        geom=geom
+        timeout=timeout
     )
-
 
 confirm = _confirmTkinter
 
@@ -182,7 +178,13 @@ def timeoutBoxRoot():
     __enterboxText = TIMEOUT_RETURN_VALUE
 
 
-def _buttonbox(msg, title, choices, root=None, timeout=None, geom=None):
+def overlay(w1,w2):
+   print "overlay",w1.winfo_geometry()
+   w2.geometry(w1.winfo_geometry())
+   w1.withdraw()
+   w2.deiconify()
+
+def _buttonbox(msg, title, choices, root=None, timeout=None):
     """
     Display a msg, a title, and a set of buttons.
     The buttons are defined by the members of the choices list.
@@ -199,18 +201,14 @@ def _buttonbox(msg, title, choices, root=None, timeout=None, geom=None):
     __replyButtonText = choices[0]
 
     if root:
-        root.withdraw()
         boxRoot = tk.Toplevel(master=root)
         boxRoot.withdraw()
     else:
         boxRoot = tk.Tk()
         boxRoot.withdraw()
-    if geom:
-      rootWindowPosition=geom
 
     boxRoot.title(title)
     boxRoot.iconname("Dialog")
-    boxRoot.geometry(rootWindowPosition)
     boxRoot.minsize(200,100)
     boxRoot.protocol('WM_DELETE_WINDOW',lambda: None)
 
@@ -233,18 +231,17 @@ def _buttonbox(msg, title, choices, root=None, timeout=None, geom=None):
     # put the focus on the first button
     __firstWidget.focus_force()
 
-    boxRoot.deiconify()
     if timeout is not None:
         boxRoot.after(timeout, timeoutBoxRoot)
+    boxRoot.after(100,lambda: overlay(root,boxRoot))
     boxRoot.mainloop()
     try:
         boxRoot.destroy()
     except tk.TclError:
         if __replyButtonText != TIMEOUT_RETURN_VALUE:
             __replyButtonText = None
-
-    if root:
-        root.deiconify()
+#    if root:
+#        root.deiconify()
     return __replyButtonText
 
 
