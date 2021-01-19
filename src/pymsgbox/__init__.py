@@ -1,7 +1,7 @@
 # PyMsgBox - A simple, cross-platform, pure Python module for JavaScript-like message boxes.
 # By Al Sweigart al@inventwithpython.com
 
-__version__ = "1.0.9"
+__version__ = "1.0.11"
 
 # Modified BSD License
 # Derived from Stephen Raymond Ferg's EasyGui http://easygui.sourceforge.net/
@@ -342,6 +342,7 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None)
     boxRoot.iconname("Dialog")
     boxRoot.geometry(rootWindowPosition)
     boxRoot.bind("<Escape>", __enterboxCancel)
+    boxRoot.protocol('WM_DELETE_WINDOW',lambda: None)
 
     # ------------- define the messageFrame ---------------------------------
     messageFrame = tk.Frame(master=boxRoot)
