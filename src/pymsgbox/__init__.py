@@ -88,6 +88,7 @@ TRY_AGAIN_TEXT = "Try Again"
 CONTINUE_TEXT = "Continue"
 
 TIMEOUT_RETURN_VALUE = "Timeout"
+ERROR_RETURN_VALUE = "Error"
 
 # Initialize some global variables that will be reset later
 __choiceboxMultipleSelect = None
@@ -95,6 +96,7 @@ __widgetTexts = None
 __replyButtonText = None
 __choiceboxResults = None
 __firstWidget = None
+__enterboxReply = None
 __enterboxText = None
 __enterboxDefaultText = ""
 __multenterboxText = ""
@@ -136,23 +138,23 @@ def _confirmTkinter(text="", title="", buttons=(OK_TEXT, CANCEL_TEXT), root=None
 confirm = _confirmTkinter
 
 
-def _promptTkinter(text="", title="", default="", root=None, timeout=None):
+def _promptTkinter(text="", title="", default="", root=None, timeout=None, geom=None):
     """Displays a message box with text input, and OK & Cancel buttons. Returns the text entered, or None if Cancel was clicked."""
     assert TKINTER_IMPORT_SUCCEEDED, "Tkinter is required for pymsgbox"
     text = str(text)
     return __fillablebox(
-        text, title, default=default, mask=None, root=root, timeout=timeout
+        text, title, default=default, mask=None, root=root, timeout=timeout, geom=geom
     )
 
 
 prompt = _promptTkinter
 
 
-def _passwordTkinter(text="", title="", default="", mask="*", root=None, timeout=None):
+def _passwordTkinter(text="", title="", default="", mask="*", root=None, timeout=None, geom=None):
     """Displays a message box with text input, and OK & Cancel buttons. Typed characters appear as *. Returns the text entered, or None if Cancel was clicked."""
     assert TKINTER_IMPORT_SUCCEEDED, "Tkinter is required for pymsgbox"
     text = str(text)
-    return __fillablebox(text, title, default, mask=mask, root=root, timeout=timeout)
+    return __fillablebox(text, title, default, mask=mask, root=root, timeout=timeout, geom=geom)
 
 
 password = _passwordTkinter
@@ -172,10 +174,10 @@ if sys.platform == "win32":
 
 
 def timeoutBoxRoot():
-    global boxRoot, __replyButtonText, __enterboxText
-    boxRoot.destroy()
+    global boxRoot, __replyButtonText, __enterboxReply
+    boxRoot.quit()
     __replyButtonText = TIMEOUT_RETURN_VALUE
-    __enterboxText = TIMEOUT_RETURN_VALUE
+    __enterboxReply = TIMEOUT_RETURN_VALUE
 
 
 def overlay(w1,w2):
@@ -312,7 +314,7 @@ def __cancelButtonEvent(event):
     boxRoot.quit()
 
 
-def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None):
+def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None, geom=None):
     """
     Show a box in which a user can enter some text.
     You may optionally specify some default text, which will appear in the
@@ -320,7 +322,7 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None)
     Returns the text that the user entered, or None if he cancels the operation.
     """
 
-    global boxRoot, __enterboxText, __enterboxDefaultText
+    global boxRoot, __enterboxText, __enterboxDefaultText, __enterboxReply
     global cancelButton, entryWidget, okButton
 
     if title == None:
@@ -329,6 +331,7 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None)
         default = ""
     __enterboxDefaultText = default
     __enterboxText = __enterboxDefaultText
+    __enterboxReply = CANCEL_TEXT
 
     if root:
         root.withdraw()
@@ -337,10 +340,12 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None)
     else:
         boxRoot = tk.Tk()
         boxRoot.withdraw()
+    if geom:
+        boxRoot.geometry(geom)
+    boxRoot.attributes('-topmost', True)
 
     boxRoot.title(title)
     boxRoot.iconname("Dialog")
-    boxRoot.geometry(rootWindowPosition)
     boxRoot.bind("<Escape>", __enterboxCancel)
     boxRoot.protocol('WM_DELETE_WINDOW',lambda: None)
 
@@ -412,21 +417,22 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, timeout=None)
     boxRoot.mainloop()  # run it!
 
     # -------- after the run has completed ----------------------------------
-    if root:
-        root.deiconify()
+#    if root:
+#        root.deiconify()
     try:
         boxRoot.destroy()  # button_click didn't destroy boxRoot, so we do it now
     except tk.TclError:
-        if __enterboxText != TIMEOUT_RETURN_VALUE:
-            return None
+        if __enterboxReply != TIMEOUT_RETURN_VALUE:
+            __enterboxReply = ERROR_RETURN_VALUE
 
-    return __enterboxText
+    return __enterboxReply, __enterboxText
 
 
 def __enterboxGetText(event):
-    global __enterboxText
+    global __enterboxText, __enterboxReply
 
     __enterboxText = entryWidget.get()
+    __enterboxReply = OK_TEXT
     boxRoot.quit()
 
 
@@ -441,4 +447,5 @@ def __enterboxCancel(event):
     global __enterboxText
 
     __enterboxText = None
+    __enterboxReply = CANCEL_TEXT
     boxRoot.quit()
