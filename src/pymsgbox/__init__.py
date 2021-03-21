@@ -1,7 +1,7 @@
 # PyMsgBox - A simple, cross-platform, pure Python module for JavaScript-like message boxes.
 # By Al Sweigart al@inventwithpython.com
 
-__version__ = "1.0.11"
+__version__ = "1.0.13"
 
 # Modified BSD License
 # Derived from Stephen Raymond Ferg's EasyGui http://easygui.sourceforge.net/
@@ -48,8 +48,10 @@ TKINTER_IMPORT_SUCCEEDED = True
 try:
     if RUNNING_PYTHON_2:
         import Tkinter as tk
+        print ("Python=2")
     else:
         import tkinter as tk
+        print("Python=3")
 
     rootWindowPosition = "+300+200"
 
@@ -181,10 +183,13 @@ def timeoutBoxRoot():
 
 
 def overlay(w1,w2):
-   print "overlay",w1.winfo_geometry()
-   w2.geometry(w1.winfo_geometry())
-   w1.withdraw()
-   w2.deiconify()
+    if RUNNING_PYTHON_2:
+        print ("overlay",w1.winfo_geometry())
+    else:
+        print("overlay",w1.winfo_geometry())
+    w2.geometry(w1.winfo_geometry())
+    w1.withdraw()
+    w2.deiconify()
 
 def _buttonbox(msg, title, choices, root=None, timeout=None):
     """
